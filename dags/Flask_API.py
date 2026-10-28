@@ -143,14 +143,20 @@ def index():
     ok, _ = get_latest_run_info()
     return redirect("/success" if ok else "/failure")
 
+# Each page sends you to the other one if it doesn't match the latest run,
+# so a bookmarked or refreshed page never shows an old result.
 @app.route("/success")
 def success():
-    _, info = get_latest_run_info()
+    ok, info = get_latest_run_info()
+    if not ok:
+        return redirect("/failure")
     return render_template("success.html", **info)
 
 @app.route("/failure")
 def failure():
-    _, info = get_latest_run_info()
+    ok, info = get_latest_run_info()
+    if ok:
+        return redirect("/success")
     return render_template("failure.html", **info)
 
 @app.route("/health")
