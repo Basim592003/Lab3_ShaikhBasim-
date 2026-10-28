@@ -1,0 +1,136 @@
+{%- set running = state in ["queued", "running"] -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if running %}<meta http-equiv="refresh" content="5;url=/">{% endif %}
+    <title>Pipeline Failure | MLOps Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #fff1f2;
+            --card-bg: #ffffff;
+            --error-red: #e11d48;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(225, 29, 72, 0.1);
+            padding: 40px;
+            text-align: center;
+            border-top: 8px solid var(--error-red);
+        }
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: #fff1f2;
+            color: var(--error-red);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+            font-weight: bold;
+        }
+        h1 { margin: 0 0 10px; font-weight: 600; color: var(--text-main); }
+        p { color: var(--text-muted); margin-bottom: 30px; }
+        
+        .metadata-grid {
+            background: #fafafa;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+        .meta-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .meta-label { font-weight: 600; color: var(--text-muted); }
+        .meta-value { color: var(--error-red); font-family: monospace; }
+
+        .btn-group { display: flex; flex-direction: column; gap: 10px; }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            box-sizing: border-box;
+            display: block;
+        }
+        .btn-danger { background: var(--error-red); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--error-red); color: var(--error-red); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if running %}
+        <div class="icon-circle">…</div>
+        <h1>Pipeline Running</h1>
+        <p>Run <strong>{{ run_id }}</strong> is still in progress. This page refreshes every 5 seconds.</p>
+        {% else %}
+        <div class="icon-circle">!</div>
+        <h1>Execution Interrupted</h1>
+        <p>The DAG <strong>{{ run_id }}</strong> encountered a critical error during execution.</p>
+        {% endif %}
+
+        <div class="metadata-grid">
+            <div class="meta-item">
+                <span class="meta-label">Status</span>
+                <span class="meta-value">{{ state | upper }}</span>
+            </div>
+            {% if note %}
+            <div class="meta-item">
+                <span class="meta-label">Reason</span>
+                <span class="meta-value" style="text-align: right; margin-left: 16px;">{{ note }}</span>
+            </div>
+            {% endif %}
+            {% for name, accuracy in metrics.get("accuracy", {}).items() %}
+            <div class="meta-item">
+                <span class="meta-label">{{ name | replace("_", " ") | title }}</span>
+                <span class="meta-value">{{ accuracy }}</span>
+            </div>
+            {% endfor %}
+            <div class="meta-item">
+                <span class="meta-label">Detected At</span>
+                <span class="meta-value" id="current-time"></span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Reference</span>
+                <span class="meta-value" style="color:#64748b">#{{ run_id[:8] }}</span>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <a href="mailto:support@example.com?subject=Pipeline Failure: {{ run_id }}" class="btn btn-danger">Report Incident</a>
+            <a href="http://localhost:8080" class="btn btn-outline">Re-run Manually</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('current-time').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>
